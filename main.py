@@ -4,6 +4,7 @@ import os
 import shutil
 from pathlib import Path
 from qbittorrentapi import Client
+from time import sleep
 
 # Configuration
 QBIT_HOST = os.getenv("QBIT_HOST")
@@ -37,7 +38,18 @@ def copy_torrent_content(content_path: Path):
         return False
 
 
+def move_torrents(qb):
+    new_torrents = qb.torrents_info(category="")
+    for new_torrent in new_torrents:
+        for tracker in new_torrent.trackers:
+            if "myanonamouse" in tracker.url:
+                qb.torrents_set_category(
+                    category=SOURCE_CATEGORY,
+                    torrent_hashes=new_torrent.hash
+                )
+
 def main():
+    print("Starting script...", flush=True)
     qb = Client(
         host=QBIT_HOST,
         username=QBIT_USERNAME,
@@ -45,41 +57,43 @@ def main():
     )
 
     qb.auth_log_in()
-    print(qb.torrents_categories())
-    torrents = qb.torrents_info(category=SOURCE_CATEGORY)
 
-    print(f"Found {len(torrents)} torrents in category '{SOURCE_CATEGORY}'")
+    while (True):
+        move_torrents(qb)
+        torrents = qb.torrents_info(category=SOURCE_CATEGORY)
 
-    for torrent in torrents:
-        try:
-            content_path = Path(torrent.content_path)
-            print(content_path.name)
-            # Some setups report paths outside the desired root.
-            if not content_path.exists():
-                # Try rebuilding from save_path + name
-                content_path = Path(torrent.save_path) / torrent.name
+        print(f"Found {len(torrents)} torrents in category '{SOURCE_CATEGORY}'")
 
-            if not content_path.exists():
-                print(
-                    f"Cannot find content for '{torrent.name}' at "
-                    f"{content_path}"
-                )
-                continue
+        for torrent in torrents:
+            try:
+                content_path = Path(torrent.content_path)
+                print(content_path.name)
+                # Some setups report paths outside the desired root.
+                if not content_path.exists():
+                    # Try rebuilding from save_path + name
+                    content_path = Path(torrent.save_path) / torrent.name
 
-            if copy_torrent_content(content_path):
-                qb.torrents_set_category(
-                    category=DEST_CATEGORY,
-                    torrent_hashes=torrent.hash
-                )
+                if not content_path.exists():
+                    print(
+                        f"Cannot find content for '{torrent.name}' at "
+                        f"{content_path}"
+                    )
+                    continue
 
-                print(
-                    f"Updated category: "
-                    f"{torrent.name} -> {DEST_CATEGORY}"
-                )
+                if copy_torrent_content(content_path):
+                    qb.torrents_set_category(
+                        category=DEST_CATEGORY,
+                        torrent_hashes=torrent.hash
+                    )
 
-        except Exception as e:
-            print(f"Error processing {torrent.name}: {e}")
+                    print(
+                        f"Updated category: "
+                        f"{torrent.name} -> {DEST_CATEGORY}"
+                    )
 
+            except Exception as e:
+                print(f"Error processing {torrent.name}: {e}")
+        sleep(120)
     print("Done.")
 
 
