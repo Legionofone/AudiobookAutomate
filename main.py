@@ -6,9 +6,9 @@ from pathlib import Path
 from qbittorrentapi import Client
 
 # Configuration
-QBIT_HOST = os.getenv("QB_HOST")
-QBIT_USERNAME = os.getenv("QB_USERNAME")
-QBIT_PASSWORD = os.getenv("QB_PASS")
+QBIT_HOST = os.getenv("QBIT_HOST")
+QBIT_USERNAME = os.getenv("QBIT_USERNAME")
+QBIT_PASSWORD = os.getenv("QBIT_PASS")
 
 SOURCE_CATEGORY = os.getenv("SOURCE_CATEGORY")
 DEST_CATEGORY = os.getenv("DEST_CATEGORY")
