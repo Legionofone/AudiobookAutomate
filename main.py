@@ -66,16 +66,16 @@ def main():
                 )
                 continue
 
-            # if copy_torrent_content(content_path):
-            #     qb.torrents_set_category(
-            #         category=DEST_CATEGORY,
-            #         torrent_hashes=torrent.hash
-            #     )
-            #
-            #     print(
-            #         f"Updated category: "
-            #         f"{torrent.name} -> {DEST_CATEGORY}"
-            #     )
+            if copy_torrent_content(content_path):
+                qb.torrents_set_category(
+                    category=DEST_CATEGORY,
+                    torrent_hashes=torrent.hash
+                )
+
+                print(
+                    f"Updated category: "
+                    f"{torrent.name} -> {DEST_CATEGORY}"
+                )
 
         except Exception as e:
             print(f"Error processing {torrent.name}: {e}")
